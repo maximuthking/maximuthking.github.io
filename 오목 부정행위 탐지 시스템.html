@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오목 부정행위 탐지 시스템 아키텍처</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .flow-arrow {
+            font-size: 2rem;
+            line-height: 1;
+            color: #4A5568;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#003B73] mb-2">오목 부정행위 탐지 시스템</h1>
+            <p class="text-lg text-gray-600">데이터 기반 분석으로 공정한 게임 환경 구축하기</p>
+        </header>
+
+        <main>
+            <section id="architecture" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#003B73]">핵심 아키텍처: 실시간 처리와 비동기 분석의 분리</h2>
+                <p class="max-w-3xl mx-auto text-center text-gray-700 mb-10">
+                    안정적인 게임 플레이를 보장하고 심층적인 분석을 수행하기 위해, 실시간 게임 서버와 계산 집약적인 분석 시스템을 메시지 큐를 통해 완전히 분리합니다. 이 구조는 성능 저하 없이 대규모 데이터를 처리할 수 있는 확장성과 안정성을 제공합니다.
+                </p>
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0 md:space-x-8">
+                        <div class="text-center flex-1">
+                            <div class="text-6xl mb-2">🎮</div>
+                            <h3 class="text-xl font-bold text-[#0074D9]">실시간 게임 서버 (Node.js)</h3>
+                            <p class="text-gray-600 mt-2">클라이언트의 수신, 유효성 검사, 게임 상태 업데이트 등 실시간 상호작용을 처리합니다.</p>
+                        </div>
+                        <div class="flow-arrow transform rotate-90 md:rotate-0">→</div>
+                        <div class="text-center flex-1">
+                            <div class="text-6xl mb-2">📨</div>
+                            <h3 class="text-xl font-bold text-[#0074D9]">메시지 큐 (RabbitMQ/Redis)</h3>
+                            <p class="text-gray-600 mt-2">게임 데이터를 분석 시스템으로 안정적으로 전달하는 버퍼 역할을 수행합니다.</p>
+                        </div>
+                        <div class="flow-arrow transform rotate-90 md:rotate-0">→</div>
+                        <div class="text-center flex-1">
+                            <div class="text-6xl mb-2">🔬</div>
+                            <h3 class="text-xl font-bold text-[#0074D9]">분석 워커 (Analysis Workers)</h3>
+                            <p class="text-gray-600 mt-2">오라클 엔진을 사용하여 수의 가치를 평가하고 부정행위 지표를 계산하는 비동기 프로세스입니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="detection-metrics" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#003B73]">다중 요인 탐지 모델</h2>
+                <p class="max-w-3xl mx-auto text-center text-gray-700 mb-10">
+                    단일 지표만으로는 정교한 부정행위를 탐지하기 어렵습니다. 저희 시스템은 경기력 지표와 행동 지표를 종합하여 플레이어의 패턴을 다각도로 분석하고, '의심 점수'를 산출하여 보다 정확하게 이상 행동을 식별합니다.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-[#0074D9]">지표 1: 평가치 손실 (Evaluation Loss)</h3>
+                        <p class="text-gray-600 mb-4">플레이어의 수가 오라클 엔진이 추천하는 최적의 수에 비해 얼마나 전략적 가치가 떨어지는지를 정량화한 값입니다. 손실이 낮을수록 AI와 유사한 플레이를 했다는 의미입니다.</p>
+                        <div class="chart-container h-64 md:h-72">
+                            <canvas id="evaluationLossChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-[#0074D9]">지표 2: 엔진 일치율 (Engine Correlation)</h3>
+                        <p class="text-gray-600 mb-4">플레이어의 수가 오라클 엔진이 추천하는 상위 N개의 수와 일치하는 비율입니다. 지속적으로 높은 일치율은 외부 도구 사용의 강력한 신호일 수 있습니다.</p>
+                        <div class="chart-container h-64 md:h-72">
+                            <canvas id="engineCorrelationChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:col-span-2">
+                        <h3 class="text-2xl font-bold mb-4 text-[#0074D9]">지표 3: 행동 생체 인식 (Behavioral Biometrics)</h3>
+                        <p class="text-gray-600 mb-6">수를 '어떻게' 두었는지 분석합니다. 인간 플레이어는 상황의 난이도에 따라 생각하는 시간이 달라지는 자연스러운 리듬을 보이지만, 기계적인 플레이는 일정한 시간 패턴을 보일 가능성이 높습니다.</p>
+                        <div class="chart-container h-72 md:h-80">
+                            <canvas id="moveTimeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="profiling" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#003B73]">플레이어 프로파일링과 Z-점수 분석</h2>
+                <p class="max-w-3xl mx-auto text-center text-gray-700 mb-10">
+                    단 한 게임의 결과만으로 판단하는 것은 위험합니다. 시스템은 플레이어의 과거 데이터를 축적하여 개인별 '기량 기준선'을 설정하고, 특정 게임의 경기력이 이 기준선에서 통계적으로 얼마나 벗어났는지를 Z-점수로 측정하여 객관적인 판단 근거를 마련합니다.
+                </p>
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <div class="md:col-span-2">
+                        <h3 class="text-2xl font-bold mb-4 text-[#0074D9]">경기력 분포와 이상치 탐지</h3>
+                        <p class="text-gray-600 mb-4">아래 차트는 한 플레이어의 과거 '평가치 손실' 분포를 보여줍니다. 대부분의 게임은 평균 근처에 분포하지만, 특정 게임(붉은 점)에서 비정상적으로 낮은 손실을 기록했습니다. Z-점수가 -3.5라면, 이는 통계적으로 극히 드문 현상으로 강력한 이상 신호입니다.</p>
+                        <div class="chart-container h-72 md:h-80">
+                            <canvas id="zScoreChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="text-center p-6 bg-blue-50 rounded-lg">
+                        <h4 class="text-xl font-bold text-[#003B73]">Z-점수란?</h4>
+                        <p class="text-gray-700 mt-2 mb-4">데이터가 평균에서 표준편차의 몇 배만큼 떨어져 있는지를 나타내는 통계적 척도입니다.</p>
+                        <div class="text-6xl font-bold text-[#0074D9]">-3.5σ</div>
+                        <p class="mt-4 text-sm text-gray-600">Z-점수 절댓값이 3 이상이면 통계적으로 유의미한 이상치로 간주되며, 정밀 조사의 대상이 됩니다.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="suspicion-score" class="text-center">
+                <h2 class="text-3xl font-bold mb-8 text-[#003B73]">종합 의심 점수 모델</h2>
+                <p class="max-w-3xl mx-auto text-gray-700 mb-10">
+                    모든 분석 지표는 가중치가 부여된 '의심 점수'로 통합됩니다. 이 점수가 사전에 설정된 임계값을 초과하면 해당 게임은 자동으로 플래그 지정되어 운영팀의 최종 검토를 받게 됩니다. 이는 오탐을 줄이고 탐지 효율성을 극대화합니다.
+                </p>
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 max-w-4xl mx-auto">
+                    <div class="chart-container h-80 md:h-96">
+                        <canvas id="suspicionScoreChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-16 text-gray-500 text-sm">
+            <p>본 인포그래픽은 MAXIMUTH의 '웹 기반 오목 게임을 위한 수 평가 및 부정행위 방지 시스템 아키텍처 설계서'를 기반으로 제작되었습니다.</p>
+            <p>&copy; 2025 MAXIMUTH. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        const COLORS = {
+            primary: '#0074D9',
+            secondary: '#7FDBFF',
+            accent: '#39CCCC',
+            text: '#4A5568',
+            danger: '#FF4136',
+            background: '#FFFFFF',
+            grid: '#E2E8F0'
+        };
+
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) {
+                return label.join(' ');
+            }
+            return label;
+        };
+        
+        const commonChartOptions = {
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: COLORS.text
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: tooltipTitleCallback
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: COLORS.text },
+                    grid: { color: COLORS.grid }
+                },
+                y: {
+                    ticks: { color: COLORS.text },
+                    grid: { color: COLORS.grid }
+                }
+            }
+        };
+
+        const wrapLabel = (label) => {
+            if (label.length <= 16) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                if ((currentLine + word).length > 16) {
+                    lines.push(currentLine.trim());
+                    currentLine = '';
+                }
+                currentLine += word + ' ';
+            }
+            lines.push(currentLine.trim());
+            return lines;
+        };
+
+        new Chart(document.getElementById('evaluationLossChart'), {
+            type: 'line',
+            data: {
+                labels: ['게임 1', '게임 2', '게임 3', '게임 4', '의심 게임', '게임 6', '게임 7'],
+                datasets: [{
+                    label: '일반 플레이어의 평가치 손실',
+                    data: [45, 55, 60, 50, 75, 65, 70],
+                    borderColor: COLORS.secondary,
+                    backgroundColor: 'rgba(127, 219, 255, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }, {
+                    label: '부정행위 의심 플레이어의 평가치 손실',
+                    data: [50, 48, 52, 45, 5, 49, 53],
+                    borderColor: COLORS.danger,
+                    backgroundColor: 'rgba(255, 65, 54, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { ...commonChartOptions, scales: { ...commonChartOptions.scales, y: { ...commonChartOptions.scales.y, title: { display: true, text: '평균 손실 점수' }}}}
+        });
+
+        new Chart(document.getElementById('engineCorrelationChart'), {
+            type: 'bar',
+            data: {
+                labels: ['초보자', '중급자', '상급자', '프로', '부정행위 의심'],
+                datasets: [{
+                    label: 'Top-1 엔진 일치율 (%)',
+                    data: [25, 45, 65, 80, 95],
+                    backgroundColor: [COLORS.secondary, COLORS.secondary, COLORS.accent, COLORS.primary, COLORS.danger],
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: { ...commonChartOptions, indexAxis: 'y' }
+        });
+
+        new Chart(document.getElementById('moveTimeChart'), {
+            type: 'line',
+            data: {
+                labels: ['수 1 (쉬움)', '수 2 (쉬움)', '수 3 (복잡)', '수 4 (결정적)', '수 5 (쉬움)'],
+                datasets: [{
+                    label: '인간 플레이어의 수 소요 시간 (초)',
+                    data: [3, 4, 25, 35, 5],
+                    borderColor: COLORS.primary,
+                    tension: 0.1
+                }, {
+                    label: '기계적 플레이의 수 소요 시간 (초)',
+                    data: [10.1, 10.3, 9.9, 10.2, 10.0],
+                    borderColor: COLORS.danger,
+                    borderDash: [5, 5]
+                }]
+            },
+            options: { ...commonChartOptions, scales: { ...commonChartOptions.scales, y: { ...commonChartOptions.scales.y, title: { display: true, text: '소요 시간 (초)' }}}}
+        });
+        
+        const zScoreData = Array.from({length: 49}, () => 40 + Math.random() * 30);
+        zScoreData.push(5);
+        new Chart(document.getElementById('zScoreChart'), {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: '과거 게임의 평가치 손실',
+                    data: zScoreData.slice(0, 49).map((y, x) => ({x, y})),
+                    backgroundColor: COLORS.primary
+                }, {
+                    label: '이상치 게임 (Z = -3.5)',
+                    data: [{x: 49, y: zScoreData[49]}],
+                    backgroundColor: COLORS.danger,
+                    radius: 8,
+                    hoverRadius: 10
+                }]
+            },
+            options: { ...commonChartOptions, scales: { ...commonChartOptions.scales, x: { ...commonChartOptions.scales.x, title: { display: true, text: '게임 이력' }}, y: { ...commonChartOptions.scales.y, title: { display: true, text: '평균 평가치 손실' }}}}
+        });
+
+        new Chart(document.getElementById('suspicionScoreChart'), {
+            type: 'radar',
+            data: {
+                labels: [
+                    wrapLabel('평가치 손실 Z-점수'), 
+                    wrapLabel('Top-1 엔진 일치율'), 
+                    wrapLabel('수 소요 시간 일관성'), 
+                    wrapLabel('불리한 상황에서의 경기력'),
+                    wrapLabel('신규 계정 급상승')
+                ],
+                datasets: [{
+                    label: '의심 플레이어 점수',
+                    data: [40, 25, 20, 30, 15],
+                    fill: true,
+                    backgroundColor: 'rgba(255, 65, 54, 0.2)',
+                    borderColor: COLORS.danger,
+                    pointBackgroundColor: COLORS.danger,
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: COLORS.danger
+                }, {
+                    label: '일반 플레이어 평균',
+                    data: [5, 10, 15, 8, 5],
+                    fill: true,
+                    backgroundColor: 'rgba(0, 116, 217, 0.2)',
+                    borderColor: COLORS.primary,
+                    pointBackgroundColor: COLORS.primary,
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: COLORS.primary
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: COLORS.text }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: tooltipTitleCallback
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: { color: COLORS.grid },
+                        grid: { color: COLORS.grid },
+                        pointLabels: {
+                            color: COLORS.text,
+                            font: { size: 12 }
+                        },
+                        ticks: {
+                            backdropColor: 'rgba(255, 255, 255, 0.75)',
+                            color: COLORS.text
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
