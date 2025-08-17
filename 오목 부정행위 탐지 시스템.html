@@ -6,12 +6,14 @@
     <title>오목 부정행위 탐지 시스템 아키텍처</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- [수정됨] 나눔스퀘어라운드 웹폰트 링크로 교체 -->
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css" rel="stylesheet">
+
     <style>
+        /* [수정됨] 기본 폰트를 나눔스퀘어라운드로 변경 */
         body {
-            font-family: 'Noto Sans KR', sans-serif;
+            font-family: 'NanumSquareRound', sans-serif;
         }
         .chart-container {
             position: relative;
@@ -144,6 +146,7 @@
     </div>
 
     <script>
+        // ... (이하 JavaScript 코드는 변경사항 없음) ...
         const COLORS = {
             primary: '#0074D9',
             secondary: '#7FDBFF',
